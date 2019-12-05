@@ -1,0 +1,54 @@
+#   https://docs.docker.com/compose/compose-file/#/versioning
+version: '3'
+
+services:
+  ###########################
+  # Setup the Apache container
+  ###########################
+  apache:
+    build: docker/apache
+    container_name: {{name_project}}_apache
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/config/vhosts:/etc/apache2/sites-enabled
+      - .:/home
+    depends_on:
+      - php
+
+  ###########################
+  # Setup the Php container
+  ###########################
+  php:
+    build: docker/php
+    container_name: {{name_project}}_php
+    ports:
+      - "9000"
+    volumes:
+      - .:/home
+    environment:
+      - maildev_host={{name_project}}_maildev
+    depends_on:
+      - maildev
+      - mysql
+
+  ###########################
+  # Setup the Mysql container
+  ###########################
+  mysql:
+    image: mariadb
+    container_name: {{name_project}}_mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE={{name_project}}
+    ports:
+      - 3306:3306
+
+  ###########################
+  # Setup the Maildev container
+  ###########################
+  maildev:
+    image: djfarrelly/maildev
+    container_name: {{name_project}}_maildev
+    ports:
+      - "9001:80"
